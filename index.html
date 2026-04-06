@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InvestSim - Simulador de Investimentos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #F6F1EB;
+    --bg-secondary: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --text-primary: #1A2332;
+    --text-secondary: #5A6577;
+    --text-muted: #8B95A5;
+    --accent: #C8874D;
+    --accent-light: #E8B88A;
+    --accent-dark: #A06830;
+    --success: #2D9C6F;
+    --success-light: #E8F5EF;
+    --warning: #D4943A;
+    --warning-light: #FFF3E0;
+    --danger: #C0392B;
+    --danger-light: #FDECEB;
+    --border: #E8E0D6;
+    --shadow: rgba(26, 35, 50, 0.08);
+    --shadow-strong: rgba(26, 35, 50, 0.15);
+    --gradient-gold: linear-gradient(135deg, #C8874D 0%, #E8B88A 50%, #C8874D 100%);
+    --risk-low: #2D9C6F;
+    --risk-low-bg: #E8F5EF;
+    --risk-medium: #D4943A;
+    --risk-medium-bg: #FFF3E0;
+    --nav-bg: #1A2332;
+    --nav-text: #E8E0D6;
+  }
+
+  html.dark {
+    --bg-primary: #0F1520;
+    --bg-secondary: #1A2332;
+    --bg-card: #1E2A3A;
+    --text-primary: #ECE5DC;
+    --text-secondary: #A0AAB8;
+    --text-muted: #6B7585;
+    --accent: #E8B88A;
+    --accent-light: #C8874D;
+    --accent-dark: #F0CDA8;
+    --border: #2A3648;
+    --shadow: rgba(0, 0, 0, 0.25);
+    --shadow-strong: rgba(0, 0, 0, 0.4);
+    --success-light: #1A3328;
+    --warning-light: #2A2418;
+    --danger-light: #2A1A18;
+    --risk-low-bg: #1A3328;
+    --risk-medium-bg: #2A2418;
+    --nav-bg: #0A0F18;
+    --nav-text: #A0AAB8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(200, 135, 77, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(200, 135, 77, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app-container {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  /* Header */
+  .header {
+    background: var(--gradient-gold);
+    padding: 28px 20px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.03) 20px,
+      rgba(255,255,255,0.03) 40px
+    );
+    animation: shimmer 20s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-50px); }
+    100% { transform: translateX(50px); }
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: #FFFFFF;
+    position: relative;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    letter-spacing: 0.5px;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 4px;
+    position: relative;
+    font-weight: 500;
+  }
+
+  /* Navigation */
+  .nav-tabs {
+    display: flex;
+    background: var(--nav-bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px var(--shadow-strong);
+  }
+
+  .nav-tab {
+    flex: 1;
+    padding: 14px 8px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--nav-text);
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+  }
+
+  .nav-tab i {
+    font-size: 18px;
+  }
+
+  .nav-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(200, 135, 77, 0.08);
+  }
+
+  .nav-tab:hover:not(.active) {
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Sections */
+  .section {
+    display: none;
+    padding: 20px 16px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 20px var(--shadow-strong);
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title i {
+    color: var(--accent);
+    font-size: 20px;
+  }
+
+  /* Form Elements */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    -webkit-appearance: none;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(200, 135, 77, 0.15);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .btn-primary {
+    background: var(--gradient-gold);
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(200, 135, 77, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(200, 135, 77, 0.4);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 2px solid var(--border);
+  }
+
+  .btn-success {
+    background: var(--success);
+    color: #FFFFFF;
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #FFFFFF;
+  }
+
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+    width: auto;
+    border-radius: 8px;
+  }
+
+  /* Investment Types */
+  .invest-type {
+    padding: 16px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid var(--border);
+    background: var(--bg-card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .invest-type::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .invest-type.risk-low::before { background: var(--risk-low); }
+  .invest-type.risk-medium::before { background: var(--risk-medium); }
+
+  .invest-type.selected {
+    border-color: var(--accent);
+    background: rgba(200, 135, 77, 0.05);
+    box-shadow: 0 2px 12px rgba(200, 135, 77, 0.15);
+  }
+
+  .invest-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .invest-type-name {
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--text-primary);
+  }
+
+  .invest-type-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-low {
+    background: var(--risk-low-bg);
+    color: var(--risk-low);
+  }
+
+  .badge-medium {
+    background: var(--risk-medium-bg);
+    color: var(--risk-medium);
+  }
+
+  .invest-type-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .invest-type-rate {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 6px;
+  }
+
+  .invest-type .check-icon {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .invest-type.selected .check-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #FFF;
+  }
+
+  /* Results */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .result-item {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .result-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .result-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text-primary);
+  }
+
+  .result-value.highlight {
+    color: var(--success);
+  }
+
+  .result-item.full {
+    grid-column: 1 / -1;
+  }
+
+  /* Progress bar for results */
+  .progress-container {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-bg {
+    height: 12px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease;
+    position: relative;
+  }
+
+  .progress-invested {
+    background: var(--accent);
+  }
+
+  .progress-returns {
+    background: var(--success);
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
+  /* Chart */
+  .chart-container {
+    margin-top: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .chart-canvas {
+    width: 100%;
+    height: 220px;
+  }
+
+  /* Bill Tracker */
+  .bill-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    gap: 12px;
+  }
+
+  .bill-item.paid {
+    opacity: 0.6;
+    background: var(--success-light);
+    border-color: var(--success);
+  }
+
+  .bill-checkbox {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .bill-item.paid .bill-checkbox {
+    background: var(--success);
+    border-color: var(--success);
+    color: #FFF;
+  }
+
+  .bill-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .bill-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bill-item.paid .bill-name {
+    text-decoration: line-through;
+  }
+
+  .bill-due {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .bill-amount {
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .bill-delete {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: var(--danger-light);
+    color: var(--danger);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .bill-delete:hover {
+    background: var(--danger);
+    color: #FFF;
+  }
+
+  .bill-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .summary-item {
+    text-align: center;
+    padding: 14px 8px;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .summary-item .value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--text-primary);
+  }
+
+  .summary-item .label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  .summary-item.total .value { color: var(--accent); }
+  .summary-item.paid-s .value { color: var(--success); }
+  .summary-item.pending .value { color: var(--danger); }
+
+  /* Learn section */
+  .learn-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+
+  .learn-card h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .learn-card h3 i {
+    color: var(--accent);
+  }
+
+  .learn-card p, .learn-card li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .learn-card ul {
+    padding-left: 20px;
+    margin-top: 8px;
+  }
+
+  .learn-card li {
+    margin-bottom: 6px;
+  }
+
+  .tip-box {
+    background: var(--warning-light);
+    border-left: 4px solid var(--warning);
+    padding: 14px 16px;
+    border-radius: 0 12px 12px 0;
+    margin-top: 12px;
+  }
+
+  .tip-box p {
+    font-size: 13px;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+  }
+
+  /* Comparison Table */
+  .comparison-table {
+    width: 100%;
+    margin-top: 16px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .comparison-table th {
+    background: var(--nav-bg);
+    color: #FFF;
+    padding: 12px 10px;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+  }
+
+  .comparison-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .comparison-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .comparison-table tr:nth-child(even) td {
+    background: var(--bg-secondary);
+  }
+
+  .comparison-table .best-value {
+    color: var(--success);
+    font-weight: 800;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state i {
+    font-size: 48px;
+    margin-bottom: 12px;
+    color: var(--border);
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Toast / Notification */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--nav-bg);
+    color: #FFF;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 30px var(--shadow-strong);
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 1000;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    padding: 20px;
+  }
+
+  .modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    box-shadow: 0 20px 60px var(--shadow-strong);
+  }
+
+  .modal-overlay.show .modal {
+    transform: scale(1);
+  }
+
+  .modal h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .modal-actions .btn {
+    flex: 1;
+  }
+
+  /* Filter pills */
+  .filter-pills {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-pill {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    transition: all 0.3s;
+    user-select: none;
+  }
+
+  .filter-pill.active {
+    background: var(--accent);
+    color: #FFF;
+    border-color: var(--accent);
+  }
+
+  /* Month navigation */
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .month-nav button {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .month-nav button:hover {
+    background: var(--accent);
+    color: #FFF;
+    border-color: var(--accent);
+  }
+
+  .month-nav span {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--text-primary);
+  }
+
+  /* Entry animations */
+  .animate-in {
+    animation: slideUp 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* Responsive */
+  @media (max-width: 400px) {
+    .header h1 { font-size: 24px; }
+    .results-grid { grid-template-columns: 1fr; }
+    .bill-summary { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .comparison-table { font-size: 11px; }
+    .comparison-table th, .comparison-table td { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="header">
+    <h1><i class="fas fa-chart-line"></i> InvestSim</h1>
+    <p>Simulador de Investimentos &amp; Controle Financeiro</p>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="simulator" onclick="switchTab('simulator')">
+      <i class="fas fa-calculator"></i>
+      <span>Simular</span>
+    </div>
+    <div class="nav-tab" data-tab="compare" onclick="switchTab('compare')">
+      <i class="fas fa-chart-bar"></i>
+      <span>Comparar</span>
+    </div>
+    <div class="nav-tab" data-tab="bills" onclick="switchTab('bills')">
+      <i class="fas fa-receipt"></i>
+      <span>Contas</span>
+    </div>
+    <div class="nav-tab" data-tab="learn" onclick="switchTab('learn')">
+      <i class="fas fa-graduation-cap"></i>
+      <span>Aprender</span>
+    </div>
+  </div>
+
+  <!-- SIMULATOR SECTION -->
+  <div class="section active" id="section-simulator">
+    <div class="card animate-in">
+      <div class="card-title"><i class="fas fa-coins"></i> Valores</div>
+      <div class="form-group">
+        <label>Valor Inicial (R$)</label>
+        <input type="number" id="initialAmount" placeholder="Ex: 1000" min="0" step="100" value="1000">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Aporte Mensal (R$)</label>
+          <input type="number" id="monthlyAmount" placeholder="Ex: 200" min="0" step="50" value="200">
+        </div>
+        <div class="form-group">
+          <label>Período (meses)</label>
+          <input type="number" id="periodMonths" placeholder="Ex: 12" min="1" max="360" value="12">
+        </div>
+      </div>
+    </div>
+
+    <div class="card animate-in delay-1">
+      <div class="card-title"><i class="fas fa-shield-halved"></i> Tipo de Investimento</div>
+      <div id="investmentTypes"></div>
+    </div>
+
+    <button class="btn btn-primary animate-in delay-2" onclick="simulate()">
+      <i class="fas fa-play"></i> Simular Investimento
+    </button>
+
+    <div id="simulationResults" style="display:none; margin-top: 20px;"></div>
+  </div>
+
+  <!-- COMPARE SECTION -->
+  <div class="section" id="section-compare">
+    <div class="card animate-in">
+      <div class="card-title"><i class="fas fa-scale-balanced"></i> Comparativo de Investimentos</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+        Veja lado a lado como cada investimento rende com os mesmos valores.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor Inicial (R$)</label>
+          <input type="number" id="cmpInitial" placeholder="1000" min="0" value="1000">
+        </div>
+        <div class="form-group">
+          <label>Aporte Mensal (R$)</label>
+          <input type="number" id="cmpMonthly" placeholder="200" min="0" value="200">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Período (meses)</label>
+        <input type="number" id="cmpPeriod" placeholder="12" min="1" max="360" value="12">
+      </div>
+      <button class="btn btn-primary" onclick="compareAll()">
+        <i class="fas fa-chart-bar"></i> Comparar Todos
+      </button>
+    </div>
+    <div id="comparisonResults"></div>
+  </div>
+
+  <!-- BILLS SECTION -->
+  <div class="section" id="section-bills">
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+      <span id="currentMonthLabel"></span>
+      <button onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <div class="bill-summary" id="billSummary"></div>
+
+    <div class="filter-pills">
+      <div class="filter-pill active" data-filter="all" onclick="filterBills('all')">Todas</div>
+      <div class="filter-pill" data-filter="pending" onclick="filterBills('pending')">Pendentes</div>
+      <div class="filter-pill" data-filter="paid" onclick="filterBills('paid')">Pagas</div>
+    </div>
+
+    <div id="billsList"></div>
+
+    <button class="btn btn-primary" onclick="openAddBillModal()" style="margin-top:12px;">
+      <i class="fas fa-plus"></i> Adicionar Conta
+    </button>
+  </div>
+
+  <!-- LEARN SECTION -->
+  <div class="section" id="section-learn">
+    <div class="learn-card animate-in">
+      <h3><i class="fas fa-lightbulb"></i> Por Onde Começar?</h3>
+      <p>Investir pode parecer complicado, mas não é! O primeiro passo é entender que existem diferentes níveis de risco e retorno. Quanto menor o risco, menor o retorno — mas também menor a chance de perder dinheiro.</p>
+      <div class="tip-box">
+        <p><i class="fas fa-star"></i> Dica: Comece sempre pela reserva de emergência (3 a 6 meses de gastos) antes de investir!</p>
+      </div>
+    </div>
+
+    <div class="learn-card animate-in delay-1">
+      <h3><i class="fas fa-piggy-bank"></i> Renda Fixa vs Renda Variável</h3>
+      <p><strong>Renda Fixa</strong> é como emprestar dinheiro e receber juros por isso. É mais previsível e seguro.</p>
+      <ul>
+        <li><strong>Poupança:</strong> O mais simples, rende pouco mas é garantido pelo FGC</li>
+        <li><strong>Tesouro Direto:</strong> Títulos do governo brasileiro, muito seguros</li>
+        <li><strong>CDB:</strong> Você empresta dinheiro ao banco e recebe juros</li>
+        <li><strong>LCI/LCA:</strong> Como CDB, mas isento de imposto de renda</li>
+      </ul>
+      <div class="tip-box">
+        <p><i class="fas fa-shield-halved"></i> O FGC (Fundo Garantidor de Créditos) protege até R$ 250.000 por CPF por instituição!</p>
+      </div>
+    </div>
+
+    <div class="learn-card animate-in delay-2">
+      <h3><i class="fas fa-percent"></i> Entendendo CDI e Selic</h3>
+      <p>A <strong>Taxa Selic</strong> é a taxa básica de juros da economia brasileira, definida pelo Banco Central. O <strong>CDI</strong> (Certificado de Depósito Interbancário) segue de perto a Selic.</p>
+      <p style="margin-top:8px;">Quando um investimento rende "100% do CDI", significa que ele acompanha essa taxa. Valores acima de 100% do CDI são melhores!</p>
+    </div>
+
+    <div class="learn-card animate-in delay-3">
+      <h3><i class="fas fa-calendar-check"></i> Imposto de Renda na Renda Fixa</h3>
+      <p>A maioria dos investimentos de renda fixa tem IR regressivo:</p>
+      <ul>
+        <li><strong>Até 180 dias:</strong> 22,5%</li>
+        <li><strong>181 a 360 dias:</strong> 20%</li>
+        <li><strong>361 a 720 dias:</strong> 17,5%</li>
+        <li><strong>Acima de 720 dias:</strong> 15%</li>
+      </ul>
+      <div class="tip-box">
+        <p><i class="fas fa-hand-holding-dollar"></i> LCI e LCA são isentas de IR para pessoa física! Mesmo rendendo menos, podem ser mais vantajosas.</p>
+      </div>
+    </div>
+
+    <div class="learn-card animate-in delay-4">
+      <h3><i class="fas fa-rocket"></i> Próximos Passos</h3>
+      <ul>
+        <li>Monte sua reserva de emergência (Tesouro Selic ou CDB com liquidez)</li>
+        <li>Defina seus objetivos (curto, médio e longo prazo)</li>
+        <li>Diversifique: não coloque tudo no mesmo lugar</li>
+        <li>Use este simulador para comparar opções!</li>
+        <li>Abra conta em uma corretora de confiança</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Add Bill Modal -->
+<div class="modal-overlay" id="addBillModal">
+  <div class="modal">
+    <h3>Nova Conta</h3>
+    <div class="form-group">
+      <label>Nome da Conta</label>
+      <input type="text" id="billName" placeholder="Ex: Internet, Luz, Aluguel">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input type="number" id="billAmount" placeholder="150.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Dia do Vencimento</label>
+        <input type="number" id="billDueDay" placeholder="10" min="1" max="31">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Recorrente?</label>
+      <select id="billRecurring">
+        <option value="yes">Sim, todo mês</option>
+        <option value="no">Não, só este mês</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addBillModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addBill()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="confirmDeleteModal">
+  <div class="modal">
+    <h3>Excluir Conta?</h3>
+    <p style="color:var(--text-secondary);font-size:14px;">Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('confirmDeleteModal')">Cancelar</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ DARK MODE ============
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+  if (event.matches) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+});
+
+// ============ INVESTMENT DATA ============
+const SELIC_ANNUAL = 0.1425; // 14.25% a.a. (approximate current Selic)
+const CDI_ANNUAL = 0.1415;
+const IPCA_ANNUAL = 0.045; // ~4.5% IPCA
+
+const investments = [
+  {
+    id: 'poupanca',
+    name: 'Poupança',
+    risk: 'low',
+    riskLabel: 'Baixo',
+    desc: 'Rendimento de 70% da Selic + TR. Isenta de IR. Liquidez diária.',
+    rateAnnual: SELIC_ANNUAL * 0.7,
+    taxFree: true,
+    icon: 'fa-piggy-bank'
+  },
+  {
+    id: 'tesouro-selic',
+    name: 'Tesouro Selic',
+    risk: 'low',
+    riskLabel: 'Baixo',
+    desc: 'Título público que acompanha a taxa Selic. Liquidez D+1. Ideal para reserva de emergência.',
+    rateAnnual: SELIC_ANNUAL,
+    taxFree: false,
+    icon: 'fa-landmark'
+  },
+  {
+    id: 'tesouro-ipca',
+    name: 'Tesouro IPCA+',
+    risk: 'low',
+    riskLabel: 'Baixo',
+    desc: 'IPCA + taxa fixa. Protege contra inflação. Melhor para longo prazo.',
+    rateAnnual: IPCA_ANNUAL + 0.065,
+    taxFree: false,
+    icon: 'fa-shield-halved'
+  },
+  {
+    id: 'cdb-100',
+    name: 'CDB 100% CDI',
+    risk: 'low',
+    riskLabel: 'Baixo',
+    desc: 'Certificado de Depósito Bancário rendendo 100% do CDI. Protegido pelo FGC.',
+    rateAnnual: CDI_ANNUAL,
+    taxFree: false,
+    icon: 'fa-building-columns'
+  },
+  {
+    id: 'cdb-120',
+    name: 'CDB 120% CDI',
+    risk: 'medium',
+    riskLabel: 'Médio',
+    desc: 'CDB com rendimento acima do CDI. Geralmente exige prazo mínimo de 2+ anos.',
+    rateAnnual: CDI_ANNUAL * 1.2,
+    taxFree: false,
+    icon: 'fa-chart-line'
+  },
+  {
+    id: 'lci-lca',
+    name: 'LCI / LCA',
+    risk: 'low',
+    riskLabel: 'Baixo',
+    desc: 'Letras de crédito imobiliário/agronegócio. Isenta de IR! Protegida pelo FGC.',
+    rateAnnual: CDI_ANNUAL * 0.93,
+    taxFree: true,
+    icon: 'fa-house'
+  },
+  {
+    id: 'fundo-rf',
+    name: 'Fundo de Renda Fixa',
+    risk: 'medium',
+    riskLabel: 'Médio',
+    desc: 'Fundos que investem em títulos de renda fixa. Rendimento varia conforme gestão.',
+    rateAnnual: CDI_ANNUAL * 1.05,
+    taxFree: false,
+    icon: 'fa-briefcase'
+  }
+];
+
+let selectedInvestment = 'tesouro-selic';
+
+// ============ RENDER INVESTMENT TYPES ============
+function renderInvestmentTypes() {
+  const container = document.getElementById('investmentTypes');
+  container.innerHTML = investments.map(inv => `
+    <div class="invest-type risk-${inv.risk} ${inv.id === selectedInvestment ? 'selected' : ''}"
+         onclick="selectInvestment('${inv.id}')">
+      <div class="check-icon">
+        ${inv.id === selectedInvestment ? '<i class="fas fa-check" style="font-size:12px;"></i>' : ''}
+      </div>
+      <div class="invest-type-header">
+        <span class="invest-type-name"><i class="fas ${inv.icon}"></i> ${inv.name}</span>
+        <span class="invest-type-badge badge-${inv.risk}">${inv.riskLabel}</span>
+      </div>
+      <div class="invest-type-desc">${inv.desc}</div>
+      <div class="invest-type-rate">
+        <i class="fas fa-trending-up"></i> ~${(inv.rateAnnual * 100).toFixed(2)}% a.a.
+        ${inv.taxFree ? ' <span style="color:var(--success);">(Isento de IR)</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectInvestment(id) {
+  selectedInvestment = id;
+  renderInvestmentTypes();
+}
+
+// ============ TAX CALCULATION ============
+function getIRRate(months) {
+  const days = months * 30;
+  if (days <= 180) return 0.225;
+  if (days <= 360) return 0.20;
+  if (days <= 720) return 0.175;
+  return 0.15;
+}
+
+// ============ SIMULATION ============
+function simulate() {
+  const initial = parseFloat(document.getElementById('initialAmount').value) || 0;
+  const monthly = parseFloat(document.getElementById('monthlyAmount').value) || 0;
+  const months = parseInt(document.getElementById('periodMonths').value) || 12;
+
+  if (initial <= 0 && monthly <= 0) {
+    showToast('Informe pelo menos um valor para simular!');
+    return;
+  }
+
+  const inv = investments.find(i => i.id === selectedInvestment);
+  const monthlyRate = Math.pow(1 + inv.rateAnnual, 1/12) - 1;
+
+  let balance = initial;
+  let totalInvested = initial;
+  const chartData = [{ month: 0, balance: initial, invested: initial }];
+
+  for (let m = 1; m <= months; m++) {
+    balance = balance * (1 + monthlyRate) + monthly;
+    totalInvested += monthly;
+    chartData.push({ month: m, balance: balance, invested: totalInvested });
+  }
+
+  const grossReturn = balance - totalInvested;
+  let netReturn = grossReturn;
+  let taxAmount = 0;
+
+  if (!inv.taxFree) {
+    const irRate = getIRRate(months);
+    taxAmount = grossReturn * irRate;
+    netReturn = grossReturn - taxAmount;
+  }
+
+  const finalBalance = totalInvested + netReturn;
+  const percentReturn = totalInvested > 0 ? ((netReturn / totalInvested) * 100).toFixed(2) : 0;
+  const investedPct = totalInvested > 0 ? ((totalInvested / finalBalance) * 100).toFixed(1) : 0;
+  const returnPct = totalInvested > 0 ? ((netReturn / finalBalance) * 100).toFixed(1) : 0;
+
+  const resultsHTML = `
+    <div class="card animate-in">
+      <div class="card-title"><i class="fas fa-trophy"></i> Resultado — ${inv.name}</div>
+      <div class="results-grid">
+        <div class="result-item full">
+          <div class="result-label">Valor Final Líquido</div>
+          <div class="result-value highlight">${formatCurrency(finalBalance)}</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Total Investido</div>
+          <div class="result-value">${formatCurrency(totalInvested)}</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Rendimento Líquido</div>
+          <div class="result-value highlight">${formatCurrency(netReturn)}</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Rentabilidade</div>
+          <div class="result-value highlight">${percentReturn}%</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">${inv.taxFree ? 'IR (Isento)' : 'IR Retido'}</div>
+          <div class="result-value" style="color:${inv.taxFree ? 'var(--success)' : 'var(--danger)'}">
+            ${inv.taxFree ? 'R$ 0,00' : formatCurrency(taxAmount)}
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-label">
+          <span>Investido: ${investedPct}%</span>
+          <span style="color:var(--success);">Rendimento: ${returnPct}%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill progress-invested" style="width:${investedPct}%;"></div>
+          <div class="progress-bar-fill" style="width:100%; background: var(--success);"></div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas class="chart-canvas" id="simChart"></canvas>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('simulationResults').innerHTML = resultsHTML;
+  document.getElementById('simulationResults').style.display = 'block';
+
+  // Scroll to results
+  document.getElementById('simulationResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Draw chart
+  requestAnimationFrame(() => drawChart('simChart', chartData, months));
+}
+
+// ============ COMPARISON ============
+function compareAll() {
+  const initial = parseFloat(document.getElementById('cmpInitial').value) || 0;
+  const monthly = parseFloat(document.getElementById('cmpMonthly').value) || 0;
+  const months = parseInt(document.getElementById('cmpPeriod').value) || 12;
+
+  if (initial <= 0 && monthly <= 0) {
+    showToast('Informe pelo menos um valor!');
+    return;
+  }
+
+  const totalInvested = initial + (monthly * months);
+  const results = investments.map(inv => {
+    const monthlyRate = Math.pow(1 + inv.rateAnnual, 1/12) - 1;
+    let balance = initial;
+    for (let m = 1; m <= months; m++) {
+      balance = balance * (1 + monthlyRate) + monthly;
+    }
+    const grossReturn = balance - totalInvested;
+    let netReturn = grossReturn;
+    if (!inv.taxFree) {
+      netReturn = grossReturn - (grossReturn * getIRRate(months));
+    }
+    return {
+      ...inv,
+      finalBalance: totalInvested + netReturn,
+      netReturn: netReturn,
+      percentReturn: totalInvested > 0 ? ((netReturn / totalInvested) * 100).toFixed(2) : '0.00'
+    };
+  }).sort((a, b) => b.finalBalance - a.finalBalance);
+
+  const bestId = results[0].id;
+
+  let html = `
+    <div class="card animate-in" style="margin-top:16px; overflow-x: auto;">
+      <div class="card-title"><i class="fas fa-ranking-star"></i> Ranking de Rendimentos</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+        Investindo ${formatCurrency(totalInvested)} em ${months} ${months === 1 ? 'mês' : 'meses'}
+      </p>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Investimento</th>
+            <th>Risco</th>
+            <th>Final Líq.</th>
+            <th>Rend.</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  results.forEach((r, i) => {
+    const isBest = r.id === bestId;
+    html += `
+      <tr>
+        <td>${isBest ? '<i class="fas fa-crown" style="color:var(--accent);"></i>' : (i + 1)}</td>
+        <td style="font-weight:700;${isBest ? 'color:var(--accent);' : ''}">${r.name}</td>
+        <td><span class="invest-type-badge badge-${r.risk}" style="font-size:10px;">${r.riskLabel}</span></td>
+        <td class="${isBest ? 'best-value' : ''}">${formatCurrency(r.finalBalance)}</td>
+        <td class="${isBest ? 'best-value' : ''}">${r.percentReturn}%</td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table></div>`;
+
+  // Bar chart comparison
+  html += `
+    <div class="card animate-in delay-1" style="margin-top:16px;">
+      <div class="card-title"><i class="fas fa-chart-column"></i> Comparativo Visual</div>
+      <div id="barChartContainer"></div>
+    </div>
+  `;
+
+  document.getElementById('comparisonResults').innerHTML = html;
+
+  // Draw bar chart
+  requestAnimationFrame(() => drawBarChart(results, totalInvested));
+}
+
+function drawBarChart(results, totalInvested) {
+  const container = document.getElementById('barChartContainer');
+  if (!container) return;
+
+  const maxVal = results[0].finalBalance;
+
+  container.innerHTML = results.map((r, i) => {
+    const pct = (r.finalBalance / maxVal) * 100;
+    const returnPct = ((r.netReturn / totalInvested) * 100).toFixed(1);
+    const barColor = i === 0 ? 'var(--accent)' : (r.risk === 'low' ? 'var(--success)' : 'var(--warning)');
+    return `
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-primary);">${r.name}</span>
+          <span style="font-size:12px;font-weight:800;color:${barColor};">${formatCurrency(r.finalBalance)} (+${returnPct}%)</span>
+        </div>
+        <div style="height:18px;background:var(--border);border-radius:9px;overflow:hidden;">
+          <div style="height:100%;width:0%;background:${barColor};border-radius:9px;transition:width 0.8s ease ${i * 0.1}s;"
+               data-width="${pct}%"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Animate bars
+  setTimeout(() => {
+    container.querySelectorAll('[data-width]').forEach(bar => {
+      bar.style.width = bar.dataset.width;
+    });
+  }, 100);
+}
+
+// ============ CANVAS CHART ============
+function drawChart(canvasId, data, months) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = rect.height;
+  const padding = { top: 20, right: 16, bottom: 40, left: 70 };
+  const chartW = w - padding.left - padding.right;
+  const chartH = h - padding.top - padding.bottom;
+
+  const maxVal = Math.max(...data.map(d => d.balance));
+  const minVal = 0;
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#A0AAB8' : '#8B95A5';
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 1;
+  const gridLines = 5;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = padding.top + (chartH / gridLines) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+
+    const val = maxVal - (maxVal / gridLines) * i;
+    ctx.fillStyle = textColor;
+    ctx.font = '10px Nunito';
+    ctx.textAlign = 'right';
+    ctx.fillText(formatShort(val), padding.left - 8, y + 4);
+  }
+
+  // X axis labels
+  const labelStep = Math.max(1, Math.floor(months / 6));
+  ctx.fillStyle = textColor;
+  ctx.font = '10px Nunito';
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= months; i += labelStep) {
+    const x = padding.left + (i / months) * chartW;
+    ctx.fillText(i + 'm', x, h - padding.bottom + 18);
+  }
+
+  function getX(i) { return padding.left + (i / months) * chartW; }
+  function getY(val) { return padding.top + chartH - ((val - minVal) / (maxVal - minVal)) * chartH; }
+
+  // Invested area
+  ctx.beginPath();
+  ctx.moveTo(getX(0), getY(data[0].invested));
+  data.forEach((d, i) => ctx.lineTo(getX(i), getY(d.invested)));
+  ctx.lineTo(getX(data.length - 1), getY(0));
+  ctx.lineTo(getX(0), getY(0));
+  ctx.closePath();
+  ctx.fillStyle = isDark ? 'rgba(232, 184, 138, 0.1)' : 'rgba(200, 135, 77, 0.1)';
+  ctx.fill();
+
+  // Invested line
+  ctx.beginPath();
+  ctx.moveTo(getX(0), getY(data[0].invested));
+  data.forEach((d, i) => ctx.lineTo(getX(i), getY(d.invested)));
+  ctx.strokeStyle = 'var(--accent)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Balance area
+  ctx.beginPath();
+  ctx.moveTo(getX(0), getY(data[0].balance));
+  data.forEach((d, i) => ctx.lineTo(getX(i), getY(d.balance)));
+  ctx.lineTo(getX(data.length - 1), getY(0));
+  ctx.lineTo(getX(0), getY(0));
+  ctx.closePath();
+  ctx.fillStyle = isDark ? 'rgba(45, 156, 111, 0.15)' : 'rgba(45, 156, 111, 0.1)';
+  ctx.fill();
+
+  // Balance line
+  ctx.beginPath();
+  ctx.moveTo(getX(0), getY(data[0].balance));
+  data.forEach((d, i) => ctx.lineTo(getX(i), getY(d.balance)));
+  ctx.strokeStyle = '#2D9C6F';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Legend
+  const legendY = h - 8;
+  ctx.font = 'bold 11px Nunito';
+
+  ctx.fillStyle = '#2D9C6F';
+  ctx.fillRect(padding.left, legendY - 8, 14, 3);
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'left';
+  ctx.fillText('Saldo', padding.left + 18, legendY - 3);
+
+  ctx.fillStyle = isDark ? '#E8B88A' : '#C8874D';
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.moveTo(padding.left + 70, legendY - 6);
+  ctx.lineTo(padding.left + 84, legendY - 6);
+  ctx.strokeStyle = isDark ? '#E8B88A' : '#C8874D';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = textColor;
+  ctx.fillText('Investido', padding.left + 88, legendY - 3);
+}
+
+// ============ BILLS TRACKER ============
+let bills = [];
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let billFilter = 'all';
+let deleteIndex = -1;
+
+const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+// Initialize some sample bills
+bills = [
+  { name: 'Aluguel', amount: 1200, dueDay: 5, recurring: true, payments: {} },
+  { name: 'Internet', amount: 120, dueDay: 10, recurring: true, payments: {} },
+  { name: 'Luz', amount: 180, dueDay: 15, recurring: true, payments: {} },
+  { name: 'Água', amount: 85, dueDay: 20, recurring: true, payments: {} },
+  { name: 'Celular', amount: 65, dueDay: 12, recurring: true, payments: {} },
+];
+
+function getPaymentKey(billIdx) {
+  return currentYear + '-' + currentMonth;
+}
+
+function isBillPaid(billIdx) {
+  const key = getPaymentKey(billIdx);
+  return bills[billIdx].payments[key] === true;
+}
+
+function toggleBillPaid(billIdx) {
+  const key = getPaymentKey(billIdx);
+  bills[billIdx].payments[key] = !isBillPaid(billIdx);
+  renderBills();
+  showToast(isBillPaid(billIdx) ? 'Conta marcada como paga!' : 'Conta desmarcada');
+}
+
+function renderBills() {
+  // Update month label
+  document.getElementById('currentMonthLabel').textContent =
+    MONTH_NAMES[currentMonth] + ' ' + currentYear;
+
+  // Filter active bills for this month
+  const activeBills = bills.map((b, i) => ({ ...b, idx: i }))
+    .filter(b => {
+      if (b.recurring) return true;
+      // Non-recurring: only show if created for this month (simplified)
+      return true;
+    });
+
+  const filteredBills = activeBills.filter(b => {
+    if (billFilter === 'all') return true;
+    const paid = isBillPaid(b.idx);
+    return billFilter === 'paid' ? paid : !paid;
+  });
+
+  // Summary
+  let totalAmount = 0, paidAmount = 0, pendingAmount = 0;
+  activeBills.forEach(b => {
+    totalAmount += b.amount;
+    if (isBillPaid(b.idx)) {
+      paidAmount += b.amount;
+    } else {
+      pendingAmount += b.amount;
+    }
+  });
+
+  document.getElementById('billSummary').innerHTML = `
+    <div class="summary-item total">
+      <div class="value">${formatCurrency(totalAmount)}</div>
+      <div class="label">Total</div>
+    </div>
+    <div class="summary-item paid-s">
+      <div class="value">${formatCurrency(paidAmount)}</div>
+      <div class="label">Pago</div>
+    </div>
+    <div class="summary-item pending">
+      <div class="value">${formatCurrency(pendingAmount)}</div>
+      <div class="label">Pendente</div>
+    </div>
+  `;
+
+  // Bills list
+  const container = document.getElementById('billsList');
+  if (filteredBills.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-receipt"></i>
+        <p>${billFilter === 'all' ? 'Nenhuma conta cadastrada ainda.' : 'Nenhuma conta nesta categoria.'}</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filteredBills.map(b => {
+    const paid = isBillPaid(b.idx);
+    const today = new Date();
+    const dueDate = new Date(currentYear, currentMonth, b.dueDay);
+    const isOverdue = !paid && today > dueDate && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+
+    return `
+      <div class="bill-item ${paid ? 'paid' : ''}" style="${isOverdue ? 'border-color: var(--danger); background: var(--danger-light);' : ''}">
+        <div class="bill-checkbox" onclick="toggleBillPaid(${b.idx})">
+          ${paid ? '<i class="fas fa-check" style="font-size:12px;"></i>' : ''}
+        </div>
+        <div class="bill-info">
+          <div class="bill-name">${b.name} ${isOverdue ? '<span style="color:var(--danger);font-size:11px;font-weight:700;">ATRASADA</span>' : ''}</div>
+          <div class="bill-due">Vence dia ${b.dueDay} ${b.recurring ? '• Recorrente' : '• Único'}</div>
+        </div>
+        <div class="bill-amount">${formatCurrency(b.amount)}</div>
+        <button class="bill-delete" onclick="confirmDeleteBill(${b.idx})">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Update filter pills
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.filter === billFilter);
+  });
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderBills();
+}
+
+function filterBills(filter) {
+  billFilter = filter;
+  renderBills();
+}
+
+function openAddBillModal() {
+  document.getElementById('billName').value = '';
+  document.getElementById('billAmount').value = '';
+  document.getElementById('billDueDay').value = '';
+  document.getElementById('billRecurring').value = 'yes';
+  openModal('addBillModal');
+}
+
+function addBill() {
+  const name = document.getElementById('billName').value.trim();
+  const amount = parseFloat(document.getElementById('billAmount').value);
+  const dueDay = parseInt(document.getElementById('billDueDay').value);
+  const recurring = document.getElementById('billRecurring').value === 'yes';
+
+  if (!name) { showToast('Informe o nome da conta!'); return; }
+  if (!amount || amount <= 0) { showToast('Informe um valor válido!'); return; }
+  if (!dueDay || dueDay < 1 || dueDay > 31) { showToast('Informe um dia válido (1-31)!'); return; }
+
+  bills.push({ name, amount, dueDay, recurring, payments: {} });
+  closeModal('addBillModal');
+  renderBills();
+  showToast('Conta adicionada com sucesso!');
+}
+
+function confirmDeleteBill(idx) {
+  deleteIndex = idx;
+  document.getElementById('confirmDeleteBtn').onclick = function() {
+    bills.splice(deleteIndex, 1);
+    closeModal('confirmDeleteModal');
+    renderBills();
+    showToast('Conta excluída!');
+  };
+  openModal('confirmDeleteModal');
+}
+
+// ============ NAVIGATION ============
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.nav-tab[data-tab="${tab}"]`).classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + tab).classList.add('active');
+
+  if (tab === 'bills') renderBills();
+  if (tab === 'compare') {
+    // Sync values from simulator if available
+    const simInitial = document.getElementById('initialAmount').value;
+    const simMonthly = document.getElementById('monthlyAmount').value;
+    const simPeriod = document.getElementById('periodMonths').value;
+    if (simInitial) document.getElementById('cmpInitial').value = simInitial;
+    if (simMonthly) document.getElementById('cmpMonthly').value = simMonthly;
+    if (simPeriod) document.getElementById('cmpPeriod').value = simPeriod;
+  }
+}
+
+// ============ MODAL ============
+function openModal(id) {
+  document.getElementById(id).classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+});
+
+// ============ UTILITIES ============
+function formatCurrency(val) {
+  return 'R$ ' + val.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&.').replace(/\.(\d{2})$/, ',$1');
+}
+
+function formatShort(val) {
+  if (val >= 1000000) return 'R$ ' + (val / 1000000).toFixed(1) + 'M';
+  if (val >= 1000) return 'R$ ' + (val / 1000).toFixed(1) + 'k';
+  return 'R$ ' + val.toFixed(0);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============ INIT ============
+renderInvestmentTypes();
+renderBills();
+</script>
+</body>
+</html>
